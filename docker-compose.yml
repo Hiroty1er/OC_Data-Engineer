@@ -1,0 +1,50 @@
+services:
+  mongodb_8_0:
+    build:
+      dockerfile: Dockerfiles/mongo.dockerfile
+    container_name: mongodb_8_0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
+    environment:
+      - GLIBC_TUNABLES=glibc.cpu.hwcaps=-SHSTK   
+
+  python_3.12-slim:
+    build:
+      dockerfile: Dockerfiles/python.dockerfile
+    image: pymongo_pandas
+    container_name: py3.12-pymongo-pandas
+    working_dir: /scripts
+    volumes:
+      - python_data:/scripts
+    command: tail -f /dev/null
+    environment:
+      - MONGO_URI=mongodb://mongodb_8_0:27017/
+      - DATABASE_NAME=migration_db
+
+volumes:
+  mongo_data:
+    name: mongo_data
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/hiroty/Documents/Travail/OpenClassroom/Data-engineer/Projet-5/migration-csv-mongo/mongo_data
+      o: bind  
+
+  mongo_config:
+    name: mongo_config
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/hiroty/Documents/Travail/OpenClassroom/Data-engineer/Projet-5/migration-csv-mongo/mongo_config
+      o: bind 
+
+  python_data:
+    name: python_data
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/hiroty/Documents/Travail/OpenClassroom/Data-engineer/Projet-5/migration-csv-mongo/python_data
+      o: bind
