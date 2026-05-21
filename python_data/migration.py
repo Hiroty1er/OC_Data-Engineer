@@ -57,7 +57,7 @@ def migrate_csv_to_mongodb(csv_file_path):
         df["Discharge Date"] = pd.to_datetime(
             df["Discharge Date"], dayfirst=False, errors="coerce"
         )
-        
+
         # Renommage des colonnes pour correspondre aux clés MongoDB
         df.rename(
             columns={
@@ -79,40 +79,31 @@ def migrate_csv_to_mongodb(csv_file_path):
             },
             inplace=True,
         )
-
+        
         # Conversion en liste de dictionnaires et nettoyage final
         records = df.to_dict(orient="records")
-        clean_records = []
-        for record in records:
-
-            # Remplace NaN / NaT par None et convertit les types natifs
-            for k, v in record.items():
-
-                if isinstance(v, float) and np.isnan(v):
-                    record[k] = None
-
-                elif isinstance(v, pd.Timestamp):
-                    record[k] = v.to_pydatetime()
-                
-                elif v is pd.NaT:
-                    record[k] = None
-                # finif
-            # finfor
-
-            # room_number : conversion en int si non nul
-            if record.get("room_number") is not None:
-                record[k] = int(record["room_number"])
-
-            clean_records.append(record)
 
         # Insertion en bloc dans MongoDB
-        if clean_records:
-            result = collection.insert_many(clean_records)
-            print(
-                f"✅ {len(result.inserted_ids)} documents insérés dans la collection '{COLLECTION_NAME}'."
-            )
+        if records:
+            result = collection.insert_many(records)
+            print(f"✅ {len(result.inserted_ids)} documents insérés dans la collection '{COLLECTION_NAME}'.")
         else:
             print("Aucune donnée à insérer.")
+
+        # Contrôle d'intégrité simple
+        # Vérifie le nombre de ligne présente en base avec ceux présent dans le csv.
+        
+        nb_ligne_csv = len(df)
+        nb_ligne_db = collection.count_documents({})
+
+        if nb_ligne_csv == nb_ligne_db:
+            print(f"✅ Nombe de ligne identique entre le csv et la base de donnée")
+        else:
+            diff = nb_ligne_csv - nb_ligne_db
+            if diff > 0:
+                print(f"❌ il manque '{diff}' lignes")
+            elif diff < 0:
+                print(f"❌ il y a '{diff}' lignes en trop")
 
     except FileNotFoundError:
         print(f"❌ Fichier introuvable : {csv_file_path}")
