@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import os
 import pandas as pd
-import numpy as np
-from datetime import datetime
 from pymongo import MongoClient, errors
 
 # Récupère la variable d'environnement donné par docker-compose.yml
@@ -11,15 +9,24 @@ DATABASE_NAME = os.getenv("DATABASE_NAME")
 COLLECTION_NAME = "healthcare_records"
 
 
-def parse_date(date_str):
-    """Convertit une chaîne YYYY-MM-DD en objet datetime."""
-    if not date_str:
-        return None
-    try:
-        return datetime.strptime(date_str, "%Y-%m-%d")
-    except ValueError:
-        print(f"Format de date invalide : {date_str}")
-        return None
+def controle_integrite(nb_ligne_csv, nb_ligne_db):
+    if nb_ligne_csv == nb_ligne_db:
+        print(f"✅ Nombre de ligne identique entre le csv et la base de donnée")
+    else:
+        diff = nb_ligne_csv - nb_ligne_db
+        if diff > 0:
+            print(f"❌ il manque '{diff}' lignes")
+        elif diff < 0:
+            print(f"❌ il y a '{diff}' lignes en trop")
+
+
+def insert_bd(records, collection):
+    # Insertion en bloc dans MongoDB
+    if records:
+        result = collection.insert_many(records)
+        print(f"✅ {len(result.inserted_ids)} documents insérés dans la collection '{COLLECTION_NAME}'.")
+    else:
+        print("Aucune donnée à insérer, records vide")
 
 
 def migrate_csv_to_mongodb(csv_file_path):
@@ -41,8 +48,8 @@ def migrate_csv_to_mongodb(csv_file_path):
         for colonne in string_cols:
             df[colonne] = df[colonne].str.strip()
 
-        # Mise en majuscule des noms des patients
-        df["Name"] = df["Name"].str.upper()
+        # Mise en camel case des noms des patients
+        df["Name"] = df["Name"].str.title()
 
         # Conversion des champs numériques (vides ou invalides → NaN)
         df["Age"] = pd.to_numeric(df["Age"], errors="coerce")
@@ -80,30 +87,11 @@ def migrate_csv_to_mongodb(csv_file_path):
             inplace=True,
         )
         
-        # Conversion en liste de dictionnaires et nettoyage final
-        records = df.to_dict(orient="records")
+        # Conversion en liste de dictionnaires
+        insert_bd(df.to_dict(orient="records"), collection)
 
-        # Insertion en bloc dans MongoDB
-        if records:
-            result = collection.insert_many(records)
-            print(f"✅ {len(result.inserted_ids)} documents insérés dans la collection '{COLLECTION_NAME}'.")
-        else:
-            print("Aucune donnée à insérer.")
-
-        # Contrôle d'intégrité simple
         # Vérifie le nombre de ligne présente en base avec ceux présent dans le csv.
-        
-        nb_ligne_csv = len(df)
-        nb_ligne_db = collection.count_documents({})
-
-        if nb_ligne_csv == nb_ligne_db:
-            print(f"✅ Nombe de ligne identique entre le csv et la base de donnée")
-        else:
-            diff = nb_ligne_csv - nb_ligne_db
-            if diff > 0:
-                print(f"❌ il manque '{diff}' lignes")
-            elif diff < 0:
-                print(f"❌ il y a '{diff}' lignes en trop")
+        controle_integrite(len(df), collection.count_documents({}))
 
     except FileNotFoundError:
         print(f"❌ Fichier introuvable : {csv_file_path}")
@@ -120,4 +108,11 @@ if __name__ == "__main__":
     migrate_csv_to_mongodb(csv_file)
 
 # Faire des tests (pytest) après chaque étape de la migration.
-# Modifier le formatage des données pour une éxécution avec pandas.
+# Faire un merge into à la place d'un insert.
+# Ajouter une gestion des logs '– mongod ­­logpath myLogFile'
+# Prendre en compte le hashage des mots de passe pour se connecter à la base de données.
+
+# Ajouter un utilisateur "migration" pour limiter les possibilité d'action du script.
+
+# Lire la documentation MongoDB pour en comprendre ces avantages par rapport à SQL. (Fait)
+# Commencer à regarder une mise ne prod vers AWS.

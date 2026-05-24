@@ -6,8 +6,8 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
-      - mongo_config:/data/configdb
+      - ./mongo_data:/data/db
+      - ./mongo_config:/data/configdb
     environment:
       - GLIBC_TUNABLES=glibc.cpu.hwcaps=-SHSTK   
 
@@ -18,7 +18,7 @@ services:
     container_name: py3.12-pymongo-pandas
     working_dir: /scripts
     volumes:
-      - python_data:/scripts
+      - ./python_data:/scripts
     command: tail -f /dev/null
     environment:
       - MONGO_URI=mongodb://mongodb_8_0:27017/
@@ -27,13 +27,21 @@ services:
 volumes:
   mongo_data:
     name: mongo_data
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/hiroty/Documents/Travail/OpenClassroom/Data-engineer/Projet-5/migration-csv-mongo/mongo_data
 
   mongo_config:
     name: mongo_config
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/hiroty/Documents/Travail/OpenClassroom/Data-engineer/Projet-5/migration-csv-mongo/mongo_config
 
   python_data:
     name: python_data
-
-networks:
-  default:
-    name: migration_network
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/hiroty/Documents/Travail/OpenClassroom/Data-engineer/Projet-5/migration-csv-mongo/python_data
