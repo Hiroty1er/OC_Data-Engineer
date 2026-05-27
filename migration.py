@@ -96,7 +96,7 @@ def migrate_csv_to_mongodb(csv_file_path):
         # Création de l'identifiant avec un SHA256 sur les champs ["Name", "blood_type", "date_of_admission", "hospital"]
         # Le but et de pouvoir retrouver les identifiants lors de la prochaine update.
         # On en profite pour ajouter la colonne "id_"
-        df.insert(loc=0, column="_id", value=df.apply(make_id, axis=1))
+        df.insert(loc=0, column="id_", value=df.apply(make_id, axis=1))
 
         # Conversion en liste de dictionnaires pour coller avec le format Document de MongoDB
         # insertions de type upsert des dataframe en base de données
