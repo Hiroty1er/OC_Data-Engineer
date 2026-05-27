@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 import os
 import pandas as pd
+import hashlib
 from pymongo import MongoClient, errors
 
 # Récupère la variable d'environnement donné par docker-compose.yml
 MONGO_URI = os.getenv("MONGO_URI")
 DATABASE_NAME = os.getenv("DATABASE_NAME")
 COLLECTION_NAME = "healthcare_records"
+
+
+def make_id(ligne):
+    key = f"{ligne['name']}|{ligne['date_of_admission']}|{ligne['hospital']}|{ligne['blood_type']}"
+    return hashlib.sha256(key.encode()).hexdigest()
 
 
 def controle_integrite(nb_ligne_csv, nb_ligne_db):
@@ -23,47 +29,47 @@ def controle_integrite(nb_ligne_csv, nb_ligne_db):
 def insert_bd(records, collection):
     # Insertion en bloc dans MongoDB
     if records:
-        result = collection.insert_many(records)
+        result = collection.update_many(records)
         print(f"✅ {len(result.inserted_ids)} documents insérés dans la collection '{COLLECTION_NAME}'.")
     else:
         print("Aucune donnée à insérer, records vide")
 
 
 def migrate_csv_to_mongodb(csv_file_path):
+
     """Lit le CSV avec pandas, nettoie les données et les insère dans MongoDB."""
+
     client = MongoClient(MONGO_URI)
     db = client[DATABASE_NAME]
     collection = db[COLLECTION_NAME]
 
     try:
         # Lecture du CSV en forçant le type str pour conserver les valeurs vides
-        df = pd.read_csv(csv_file_path, dtype=str, keep_default_na=False, na_values=[])
+        df = pd.read_csv(
+                csv_file_path,
+                dtype={                   # Formatage des données
+                    "Age":                int,
+                    "Gender":             str,
+                    "Blood Type":         str,
+                    "Medical Condition":  str,
+                    "Doctor":             str,
+                    "Hospital":           str,
+                    "Insurance Provider": str,
+                    "Billing Amount":     float,
+                    "Room Number":        int,
+                    "Admission Type":     str,
+                    "Medication":         str,
+                    "Test Results":       str,
+                },
+                skip_blank_lines=True,    # pas de lignes vides
+                keep_default_na=False,    # Pour éviter les fausses valeur Null
+                na_values=[],
+                parse_dates=["Date of Admission", "Discharge Date"],  # Conversion des dates pour mettre l'année en premier
+                dayfirst=False,
+                converters={"Name": lambda x: x.strip().title()}  # Formatage des noms pour mettre la 1er lettre en MAJ
+            )
 
-        # Nettoyage des chaînes de caractères (strip)
-        string_cols = [
-            "Name", "Gender", "Blood Type", "Medical Condition",
-            "Doctor", "Hospital", "Insurance Provider",
-            "Admission Type", "Medication", "Test Results"
-        ]
-        for colonne in string_cols:
-            df[colonne] = df[colonne].str.strip()
-
-        # Mise en camel case des noms des patients
-        df["Name"] = df["Name"].str.title()
-
-        # Conversion des champs numériques (vides ou invalides → NaN)
-        df["Age"] = pd.to_numeric(df["Age"], errors="coerce")
-        df["Billing Amount"] = pd.to_numeric(df["Billing Amount"], errors="coerce")
-        df["Room Number"] = pd.to_numeric(df["Room Number"], errors="coerce")
-
-        # Parsing des dates (format jj/mm/aaaa par défaut)
-        df["Date of Admission"] = pd.to_datetime(
-            df["Date of Admission"], dayfirst=False, errors="coerce"
-        )
-
-        df["Discharge Date"] = pd.to_datetime(
-            df["Discharge Date"], dayfirst=False, errors="coerce"
-        )
+        df.drop_duplicates()
 
         # Renommage des colonnes pour correspondre aux clés MongoDB
         df.rename(
@@ -86,11 +92,18 @@ def migrate_csv_to_mongodb(csv_file_path):
             },
             inplace=True,
         )
-        
-        # Conversion en liste de dictionnaires
+
+        # Création de l'identifiant avec un SHA256 sur les champs ["Name", "blood_type", "date_of_admission", "hospital"]
+        # Le but et de pouvoir retrouver les identifiants lors de la prochaine update.
+        # On en profite pour ajouter la colonne "id_"
+        df.insert(loc=0, column="_id", value=df.apply(make_id, axis=1))
+
+        # Conversion en liste de dictionnaires pour coller avec le format Document de MongoDB
+        # insertions de type upsert des dataframe en base de données
         insert_bd(df.to_dict(orient="records"), collection)
 
         # Vérifie le nombre de ligne présente en base avec ceux présent dans le csv.
+        # Dans le cas où la synchronisation serait interompu côté serveur on aura des lignes manquantes.
         controle_integrite(len(df), collection.count_documents({}))
 
     except FileNotFoundError:
@@ -107,7 +120,6 @@ if __name__ == "__main__":
     csv_file = "/scripts/healthcare_dataset.csv"  # À adapter si le nom diffère
     migrate_csv_to_mongodb(csv_file)
 
-# Faire des tests (pytest) après chaque étape de la migration.
 # Faire un merge into à la place d'un insert.
 # Ajouter une gestion des logs '– mongod ­­logpath myLogFile'
 # Prendre en compte le hashage des mots de passe pour se connecter à la base de données.
