@@ -46,4 +46,3 @@ networks:
 secrets:
   db_migration:
     file: ./db_user.txt
-  db_password:

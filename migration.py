@@ -129,6 +129,3 @@ if __name__ == "__main__":
 # Prendre en compte le hashage des mots de passe pour se connecter à la base de données.
 
 # Ajouter un utilisateur "migration" pour limiter les possibilité d'action du script.
-
-# Lire la documentation MongoDB pour en comprendre ces avantages par rapport à SQL. (Fait)
-# Commencer à regarder une mise en prod vers AWS.
