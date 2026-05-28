@@ -8,6 +8,9 @@ services:
     volumes:
       - mongo_data:/data/db
       - mongo_config:/data/configdb
+    networks:
+      - net-pymongo
+    command: ['--logpath', '/var/log/mongodb/mongod.log']
     environment:
       - GLIBC_TUNABLES=glibc.cpu.hwcaps=-SHSTK   
 
@@ -19,6 +22,8 @@ services:
     working_dir: /scripts
     volumes:
       - python_data:/scripts
+    networks:
+      - net-pymongo
     command: tail -f /dev/null
     environment:
       - MONGO_URI=mongodb://mongodb_8_0:27017/
@@ -35,5 +40,10 @@ volumes:
     name: python_data
 
 networks:
-  default:
-    name: migration_network
+  net-pymongo:
+    name: net-migration
+
+secrets:
+  db_migration:
+    file: ./db_user.txt
+  db_password:
