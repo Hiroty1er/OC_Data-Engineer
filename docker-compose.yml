@@ -42,7 +42,3 @@ volumes:
 networks:
   net-pymongo:
     name: net-migration
-
-secrets:
-  db_migration:
-    file: ./db_user.txt
