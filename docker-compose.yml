@@ -1,7 +1,6 @@
 services:
   mongodb_8_0:
-    build:
-      dockerfile: Dockerfiles/mongo.dockerfile
+    image: mongo:8.0
     container_name: mongodb_8_0
     ports:
       - "27017:27017"
@@ -12,23 +11,33 @@ services:
       - net-pymongo
     command: ['--logpath', '/var/log/mongodb/mongod.log']
     environment:
-      - GLIBC_TUNABLES=glibc.cpu.hwcaps=-SHSTK   
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: "${ROOT_PASS}"
+      MONGO_INITDB_DATABASE: migration_db
+      GLIBC_TUNABLES: glibc.cpu.hwcaps=-SHSTK   # Obligatoire pour faire fonctionner la version 8.0
 
   python_3.12-slim:
     build:
       dockerfile: Dockerfiles/python.dockerfile
+      args:
+        PYTHON_WORKING_DIR: ${PYTHON_WORKING_DIR}
     image: pymongo_pandas
     container_name: py3.12-pymongo-pandas
-    working_dir: /scripts
+    working_dir: /${PYTHON_WORKING_DIR}
     volumes:
-      - python_data:/scripts
+      - python_data:/${PYTHON_WORKING_DIR}
     networks:
       - net-pymongo
     command: tail -f /dev/null
     environment:
-      - MONGO_URI=mongodb://mongodb_8_0:27017/
-      - DATABASE_NAME=migration_db
+      - MG_HOST=mongodb_8_0
+      - MG_PORT=27017
+      - MG_USERNAME="migration"
+      - MG_PASSWORD=${MIGRATION_PASS}
+      - DB_NAME=migration_db
 
+      - WORK_DIR=${PYTHON_WORKING_DIR}
+            
 volumes:
   mongo_data:
     name: mongo_data

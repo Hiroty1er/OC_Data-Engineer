@@ -16,9 +16,9 @@ logging.basicConfig(
     ]
 )
 
-MONGO_URI = os.getenv("MONGO_URI")
-DATABASE_NAME = os.getenv("DATABASE_NAME")
+DB_NAME = os.getenv("DB_NAME")
 COLLECTION_NAME = "healthcare_records"
+WORK_DIR = os.getenv("WORK_DIR")
 
 
 def make_id(ligne):
@@ -57,8 +57,15 @@ def controle_integrite(nb_ligne_csv, nb_ligne_db):
 
 
 def migrate_csv_to_mongodb(csv_file_path):
-    client = MongoClient(MONGO_URI)
-    db = client[DATABASE_NAME]
+
+    client = MongoClient(
+        host=os.getenv("MG_HOST"),
+        port=int(os.getenv("MG_PORT")),
+        username=os.getenv("MG_USERNAME"),
+        password=os.getenv("MG_PASSWORD"),
+        authSource=DB_NAME  # indispensable !
+    )
+    db = client[DB_NAME]
     collection = db[COLLECTION_NAME]
 
     try:
@@ -123,9 +130,8 @@ def migrate_csv_to_mongodb(csv_file_path):
 
 
 if __name__ == "__main__":
-    migrate_csv_to_mongodb("/scripts/healthcare_dataset.csv")
+    migrate_csv_to_mongodb(f"/{WORK_DIR}/healthcare_dataset.csv")
 
 
 # Prendre en compte le hashage des mots de passe pour se connecter à la base de données.
-
 # Ajouter un utilisateur "migration" pour limiter les possibilité d'action du script.
