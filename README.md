@@ -25,8 +25,8 @@ L’ensemble est conteneurisé avec Docker Compose, et un utilisateur MongoDB d�
 .
 ├── docker-compose.yml
 ├── Dockerfiles/
-│   ├── mongo.dockerfile          # (fichier non fourni, mais doit copier init-mongo.js)
-│   └── python.dockerfile         # (fichier non fourni, doit installer pandas & pymongo)
+│   ├── mongo.dockerfile          # Construction de l'image mongodb copie le fichier init-mongo.js dans le dossier 
+│   └── python.dockerfile
 ├── init-mongo.js                 # Script JS d’initialisation de MongoDB (création rôle/utilisateur)
 ├── migration.py                  # Script Python de migration
 ├── .env                          # Variables d’environnement (à créer)
