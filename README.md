@@ -72,7 +72,7 @@ PYTHON_WORKING_DIR=<nom_du_dossier>
 6. **Vérifier les logs** :
    ```bash
    docker logs mongodb_8_0    # pour voir l’initialisation MongoDB
-   docker migration.log       # fichier de log généré par le script Python
+   docker logs python       # fichier de log généré par le script Python
    ```
 
 ## Structure attendue du fichier CSV
