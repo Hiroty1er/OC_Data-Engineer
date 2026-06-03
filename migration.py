@@ -133,5 +133,3 @@ if __name__ == "__main__":
     migrate_csv_to_mongodb(f"/{WORK_DIR}/healthcare_dataset.csv")
 
 
-# Prendre en compte le hashage des mots de passe pour se connecter à la base de données.
-# Ajouter un utilisateur "migration" pour limiter les possibilité d'action du script.
