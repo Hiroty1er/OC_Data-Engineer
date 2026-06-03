@@ -58,17 +58,17 @@ def controle_integrite(nb_ligne_csv, nb_ligne_db):
 
 def migrate_csv_to_mongodb(csv_file_path):
 
-    client = MongoClient(
-        host=os.getenv("MG_HOST"),
-        port=int(os.getenv("MG_PORT")),
-        username=os.getenv("MG_USERNAME"),
-        password=os.getenv("MG_PASSWORD"),
-        authSource=DB_NAME  # indispensable !
-    )
-    db = client[DB_NAME]
-    collection = db[COLLECTION_NAME]
-
     try:
+        client = MongoClient(
+            host=os.getenv("MG_HOST"),
+            port=int(os.getenv("MG_PORT")),
+            username=os.getenv("MG_USERNAME"),
+            password=os.getenv("MG_PASSWORD"),
+            authSource=DB_NAME
+        )
+        db = client[DB_NAME]
+        collection = db[COLLECTION_NAME]
+
         df = pd.read_csv(
             csv_file_path,
             dtype={

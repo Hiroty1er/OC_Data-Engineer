@@ -1,5 +1,5 @@
 // init-mongo.js - Crée un utilisateur "migration" sur la base "migration_db"
-// avec les droits : find, insert, update, delete (pas de création/destruction d'index ou de collection)
+// avec les droits : find, insert, update
 
 const dbName = process.env.DB_NAME;
 const roleName = process.env.MG_USERNAME;

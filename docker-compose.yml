@@ -1,6 +1,7 @@
 services:
   mongodb_8_0:
-    image: mongo:8.0
+    build:
+      dockerfile: Dockerfiles/mongo.dockerfile # éxécute le script d'initialisation en javascript
     container_name: mongodb_8_0
     ports:
       - "27017:27017"
