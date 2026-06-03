@@ -71,8 +71,8 @@ PYTHON_WORKING_DIR=<nom_du_dossier>
    ```
 6. **Vérifier les logs** :
    ```bash
-   docker logs mongodb_8_0       # pour voir l’initialisation MongoDB
-   docker  migration.log             # fichier de log généré par le script Python
+   docker logs mongodb_8_0    # pour voir l’initialisation MongoDB
+   docker  migration.log      # fichier de log généré par le script Python
    ```
 
 ## Structure attendue du fichier CSV
@@ -128,9 +128,10 @@ Dans `docker-compose.yml`, la variable `GLIBC_TUNABLES=glibc.cpu.hwcaps=-SHSTK` 
 |--------|----------|
 | Démarrer les services | `docker-compose up -d` |
 | Arrêter les services | `docker-compose down` |
-| Voir les logs Python | `docker logs py3.12-pymongo-pandas` |
-| Exécuter une commande dans le conteneur Python | `docker exec -it py3.12-pymongo-pandas bash` |
-| Réinitialiser les volumes (effacer les données MongoDB) | `docker-compose down -v` |
+| Voir les logs Python | `docker logs py3.12-slim` |
+| Exécuter une commande dans le conteneur Python | `docker exec py3.12-slim /bin/bash` |
+| Réinitialiser les volumes (Effacer les données MongoDB) | `docker-compose down -v` |
+| Réinitialiser les images (Pour effectuer un rebuild des images et relancer le push des scripts) | `docker-compose down -v --rmi 'all'` |
 
 ## Personnalisation
 
