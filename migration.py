@@ -89,7 +89,7 @@ def migrate_csv_to_mongodb(csv_file_path):
             keep_default_na=False,
             na_values=[],
             parse_dates=["Date of Admission", "Discharge Date"],
-            dayfirst=False,
+            dayfirst=True,
             converters={"Name": lambda x: x.strip().title()}
         )
 

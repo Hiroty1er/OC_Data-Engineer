@@ -39,16 +39,16 @@ Créez un fichier `.env` à la racine avec les variables suivantes :
 
 ```env
 # MongoDB root
-ROOT_PASS=root_example_password
+ROOT_PASS=<root_example_password>
 
 # Utilisateur migration
-MIGRATION_PASS=migration_secure_password
+MIGRATION_PASS=<migration_example_password>
 
 # Nom de la base de données cible
 DB_NAME=migration_db
 
 # Répertoire de travail dans le conteneur Python
-PYTHON_WORKING_DIR=app
+PYTHON_WORKING_DIR=<nom_du_dossier>
 ```
 
 > Le script `init-mongo.js` utilise `DB_NAME`, `MG_USERNAME` (fixé à `migration`) et `MG_PASSWORD` pour créer l’utilisateur et le rôle.
@@ -67,12 +67,12 @@ PYTHON_WORKING_DIR=app
    - Le conteneur Python reste en vie (`tail -f /dev/null`).
 5. **Lancer le script de migration** :
    ```bash
-   docker exec -it py3.12-pymongo-pandas python migration.py
+   docker compose exec python_3.12-slim python3 migration.py
    ```
 6. **Vérifier les logs** :
    ```bash
    docker logs mongodb_8_0       # pour voir l’initialisation MongoDB
-   cat migration.log             # fichier de log généré par le script Python
+   docker  migration.log             # fichier de log généré par le script Python
    ```
 
 ## Structure attendue du fichier CSV
@@ -96,9 +96,9 @@ Le script `migration.py` s’attend aux colonnes suivantes (nom d’origine / no
 | Discharge Date           | discharge_date | datetime      |
 | Medication               | medication     | string        |
 | Test Results             | test_results   | string        |
-
-Les dates sont interprétées avec `dayfirst=False` (format américain MM/JJ/AAAA).  
-Le script supprime les doublons et nettoie la colonne `Name` (`.strip().title()`).
+ 
+Le script supprime les doublons
+Format la colonne `Name` (`.strip().title()`), pour les noms soit écris avec une majuscule sur la première lettre.
 
 ## Détails techniques
 
@@ -116,7 +116,7 @@ Le script supprime les doublons et nettoie la colonne `Name` (`.strip().title()`
 - Génération de l’`_id` par hash SHA256 de la ligne entière convertie en chaîne.
 - Utilisation de `bulk_write` avec des opérations `UpdateOne` (upsert) pour insérer/mettre à jour efficacement.
 - Comparaison du nombre de lignes entre le DataFrame et la collection après insertion (`contrôle_integrite`).
-- Les logs sont écrits dans `migration.log` et affichés sur la console.
+- Les logs sont écrits dans le répertoire d'éxecution du script migration.py dans le fichier `migration.log` et affichés sur la console.
 
 ### Workaround pour MongoDB 8.0
 
