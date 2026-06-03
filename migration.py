@@ -131,5 +131,3 @@ def migrate_csv_to_mongodb(csv_file_path):
 
 if __name__ == "__main__":
     migrate_csv_to_mongodb(f"/{WORK_DIR}/healthcare_dataset.csv")
-
-
