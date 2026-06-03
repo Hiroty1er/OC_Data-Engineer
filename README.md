@@ -33,10 +33,6 @@ L’ensemble est conteneurisé avec Docker Compose, et un utilisateur MongoDB d�
 └── healthcare_dataset.csv        # Données source (à placer)
 ```
 
-> ⚠️ Les `Dockerfile` ne sont pas inclus dans votre archive, mais vous pouvez les écrire simplement :
-> - `mongo.dockerfile` : basé sur `mongo:8.0`, copie `init-mongo.js` dans `/docker-entrypoint-initdb.d/`.
-> - `python.dockerfile` : basé sur `python:3.12-slim`, installe `pandas` et `pymongo`, et copie `migration.py`.
-
 ## Configuration
 
 Créez un fichier `.env` à la racine avec les variables suivantes :
@@ -147,15 +143,4 @@ Dans `docker-compose.yml`, la variable `GLIBC_TUNABLES=glibc.cpu.hwcaps=-SHSTK` 
 - **Erreur de connexion MongoDB** : vérifiez que le conteneur `mongodb_8_0` est bien démarré (`docker ps`). Attendez quelques secondes que l’initialisation soit terminée.
 - **Role/user already exists** : ce n’est pas bloquant, le script JS ignore la création si l’entité existe déjà.
 - **Pandas type conversion error** : vérifiez que le CSV ne contient pas de valeurs vides inattendues (le script utilise `keep_default_na=False` et `na_values=[]` pour éviter les `NaN`).
-- **GLIBC_TUNABLES** : si vous changez de version MongoDB, vous pouvez supprimer cette ligne.
-
-## Licence
-
-À définir selon votre projet.
-
-## Auteur
-
-(Mettez votre nom ou celui de l’équipe)
-```
-
-Pour enregistrer ce fichier, copiez le contenu ci-dessus dans un éditeur de texte et sauvegardez-le sous le nom `README.md`.
+- **GLIBC_TUNABLES** : Obligatoire pour MongoDB 8.0
