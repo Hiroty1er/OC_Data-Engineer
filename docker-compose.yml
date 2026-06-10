@@ -13,7 +13,7 @@ services:
     command: ['--logpath', '/var/log/mongodb/mongod.log']
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD="${ROOT_PASS}"
+      - MONGO_INITDB_ROOT_PASSWORD=${ROOT_PASS}
       - MG_USERNAME=migration
       - MG_PASSWORD=${MIGRATION_PASS}
       - DB_NAME=${DB_NAME}
